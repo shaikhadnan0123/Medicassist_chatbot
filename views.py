@@ -1,40 +1,32 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render
 from userapp.models import userModel
-from django.contrib import messages
-
 # Create your views here.
-def home(request):
-    return render(request, 'mainapp/main-home.html')
 
-def about(request):
-   return render(request, 'mainapp/main-about.html')
+def user_dash(request):
+    return render (request, 'userapp/user-dash.html')
 
-def contact(request):
-   return render(request, 'mainapp/main-contact.html')
-
-def register(request):
-    if request.method == "POST" and request.FILES["image"]:
-        name = request.POST.get("fullname")
+def user_profile(request):
+    s_id = request.session["sno"]
+    user = userModel.objects.get(sno = s_id)
+    if request.method=="POST":
+        name = request.POST.get("name")
         email = request.POST.get("email")
         phone = request.POST.get("phone")
-        address = request.POST.get("address")   
-        password = request.POST.get("pwd")
-        image = request.FILES["image"]
-        userModel.objects.create(name=name, email=email, phone = phone, address= address,password = password, image=image)
-        messages.success(request, 'You have successfully registered!')  
-        return redirect("user_login")
-    return render(request, 'mainapp/main-user-register.html')
-
-def user_login(request):
-    if request.method == "POST":
-        email = request.POST.get("email")
-        password = request.POST.get("pwd")
-        print(email,password)
-        try:
-            user = userModel.objects.get(email=email, password=password)
-            messages.success(request, 'User has successfully logged in!')
-            request.session["sno"] = user.sno
-            return redirect("user_dash")
-        except:
-            return redirect("user_login")
-    return render(request, 'mainapp/main-user-login.html')
+        address = request.POST.get("address")
+        if len(request.FILES)!= 0:
+            img = request.FILES["img"]
+            user.image = img
+            user.name = name
+            user.email = email
+            user.phone = phone
+            user.address = address
+            user.save()
+        else:
+            user.name = name
+            user.email = email
+            user.phone = phone
+            user.address = address
+            user.save()
+    context = {"user": user}
+    # print(fname,email, phone, relation, address, img)
+    return render(request, 'userapp/user-myprofile.html', context)
